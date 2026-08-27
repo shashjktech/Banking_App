@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+  //output = "../src/generated/client"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../ERD.svg"
+  theme    = "forest"                 
+}
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+datasource db {
+  provider = "postgresql"
+}
+
+// ENUMS 
+enum staffRole {
+  ADMIN
+  OPERATOR
+}
+
+enum AccountType {
+  SAVINGS
+  CURRENT
+  LOAN
+}
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+enum TransactionStatus {
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+// MODELS
+model branch{
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  branchcode  String      @unique
+  address     String
+  city        String
+  phone       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  //Inverse Relation
+  staffs     staff[]
+
+  @@index([branchcode])
+  
+}
+
+model staff{
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  branchid        String?     @db.Uuid
+  username        String      @unique
+  email           String      @unique
+  passwordHash    String 
+  role            staffRole   @default(OPERATOR)
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  //Relations
+  branch        branch?     @relation(fields: [branchid],references: [id], onDelete: SetNull)
+  transactions transaction[]
+  auditlogs    auditlog[]
+
+}
+model customer {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phoneNumber String?  @unique
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  accounts    account[]
+
+  @@index([firstName, lastName])
+  @@index([email])
+}
+
+model account {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId    String        @db.Uuid
+  accountNumber String        @unique
+  accountType   AccountType   @default(SAVINGS)
+  balance       Decimal       @default(0.00) @db.Decimal(15, 2)
+  status        AccountStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  customer      customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  outgoingTransactions transaction[] @relation("OutgoingTransactions")
+  incomingTransactions transaction[] @relation("IncomingTransactions")
+
+  @@index([accountNumber])
+  @@index([status])
+}
+
+model transaction {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fromaccountId     String?             @db.Uuid //Nullable for deposit
+  toaccountId       String?             @db.Uuid //Nullable for widthdrawl
+  staffId           String              @db.Uuid
+  type              TransactionType
+  amount            Decimal             @db.Decimal(15, 2)
+  balanceAfter      Decimal             @db.Decimal(15, 2) // Balance snapshot immediately following this transaction
+  status            TransactionStatus   @default(COMPLETED)
+  referenceNote     String?
+  createdAt         DateTime            @default(now())
+
+  // Relations
+  fromaccount   account?          @relation("OutgoingTransactions", fields: [fromaccountId], references: [id], onDelete: Restrict)
+  toAccount     account?          @relation("IncomingTransactions", fields: [toaccountId], references: [id], onDelete: Restrict)
+  staff         staff             @relation(fields: [staffId], references: [id], onDelete: Restrict)
+
+  @@index([fromaccountId])
+  @@index([toaccountId])
+  @@index([staffId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model auditlog {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId      String   @db.Uuid
+  action       String   // e.g., "STAFF_LOGIN", "DEPOSIT_PROCESSED", "ACCOUNT_FROZEN"
+  targetEntity String   // e.g., "Account", "Customer", "Staff"
+  targetId     String?  // ID of the affected resource
+  details      String?  // Additional context or JSON summary
+  createdAt    DateTime @default(now())
+
+  // Relations
+  staff        staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+
+

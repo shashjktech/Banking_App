@@ -1,0 +1,124 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table branch {
+  id String [pk]
+  name String [not null]
+  branchcode String [unique, not null]
+  address String [not null]
+  city String [not null]
+  phone String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  staffs staff [not null]
+}
+
+Table staff {
+  id String [pk]
+  branchid String
+  username String [unique, not null]
+  email String [unique, not null]
+  passwordHash String [not null]
+  role staffRole [not null, default: 'OPERATOR']
+  isActive Boolean [not null, default: true]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  branch branch
+  transactions transaction [not null]
+  auditlogs auditlog [not null]
+}
+
+Table customer {
+  id String [pk]
+  firstName String [not null]
+  lastName String [not null]
+  email String [unique, not null]
+  phoneNumber String [unique]
+  address String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  accounts account [not null]
+}
+
+Table account {
+  id String [pk]
+  customerId String [not null]
+  accountNumber String [unique, not null]
+  accountType AccountType [not null, default: 'SAVINGS']
+  balance Decimal [not null, default: 0]
+  status AccountStatus [not null, default: 'ACTIVE']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  customer customer [not null]
+  outgoingTransactions transaction [not null]
+  incomingTransactions transaction [not null]
+}
+
+Table transaction {
+  id String [pk]
+  fromaccountId String
+  toaccountId String
+  staffId String [not null]
+  type TransactionType [not null]
+  amount Decimal [not null]
+  balanceAfter Decimal [not null]
+  status TransactionStatus [not null, default: 'COMPLETED']
+  referenceNote String
+  createdAt DateTime [default: `now()`, not null]
+  fromaccount account
+  toAccount account
+  staff staff [not null]
+}
+
+Table auditlog {
+  id String [pk]
+  staffId String [not null]
+  action String [not null]
+  targetEntity String [not null]
+  targetId String
+  details String
+  createdAt DateTime [default: `now()`, not null]
+  staff staff [not null]
+}
+
+Enum staffRole {
+  ADMIN
+  OPERATOR
+}
+
+Enum AccountType {
+  SAVINGS
+  CURRENT
+  LOAN
+}
+
+Enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+Enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+Enum TransactionStatus {
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+Ref: staff.branchid > branch.id [delete: Set Null]
+
+Ref: account.customerId > customer.id [delete: Restrict]
+
+Ref: transaction.fromaccountId > account.id [delete: Restrict]
+
+Ref: transaction.toaccountId > account.id [delete: Restrict]
+
+Ref: transaction.staffId > staff.id [delete: Restrict]
+
+Ref: auditlog.staffId > staff.id [delete: Cascade]
