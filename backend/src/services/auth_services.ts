@@ -1,7 +1,6 @@
 import { prisma } from "../utils/db";
 import { AppError } from "../error/AppError";
 import { loginPayload, RegisterUserPayload } from "../types/types";
-import { findUserbyEmail, findUserbyId } from "../repositories/userRepository";
 import bcrypt from "bcryptjs";
 import { arraySync } from "stream/iter";
 import { generateUniqueAccountNumber } from "./account_number_generation";
