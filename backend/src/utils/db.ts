@@ -7,6 +7,7 @@ const pool = new Pool({
     connectionString: env.databaseUrl,
     max: 10,
     idleTimeoutMillis: 30000,
+    ssl: { rejectUnauthorized: false }
 })
 const adapter  = new PrismaPg(pool);
 export const prisma = new PrismaClient({adapter});
