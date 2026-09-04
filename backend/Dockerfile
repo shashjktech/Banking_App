@@ -14,6 +14,7 @@ RUN npm install
 # 5. Copy all other backend files (src, tsconfig, etc.)
 COPY . .
 
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost/dummy"
 # 6. Run your build script (Compiles TypeScript and generates Prisma client)
 RUN npm run build
 
