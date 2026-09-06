@@ -7,7 +7,15 @@ const pool = new Pool({
     connectionString: env.databaseUrl,
     max: 10,
     idleTimeoutMillis: 30000,
-    ssl: { rejectUnauthorized: false }
+    //ssl: { rejectUnauthorized: false }
 })
+pool.on('connect', () => {
+  console.log('✅ PostgreSQL client connected successfully');
+});
+
+pool.on('error', (err) => {
+  console.error('❌ PostgreSQL pool error:', err);
+});
+
 const adapter  = new PrismaPg(pool);
 export const prisma = new PrismaClient({adapter});

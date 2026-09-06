@@ -11,7 +11,9 @@ export const staffRouter = Router();
 
 staffRouter.post('/login', async (req, res, next) => {
   try {
+    console.log("request initiated");
     const { identifier, password } = req.body;
+    
     const result = await loginStaff({identifier, password});
 
     res.cookie('staffToken', result, {
