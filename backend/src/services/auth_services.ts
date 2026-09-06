@@ -177,14 +177,14 @@ const FIXED_LOAN_INTEREST_RATE = 0.085;
 // }
 
 export const loginStaff = async (data: StaffLoginDTO) => {
+  console.log("Step 1: Login attempt started for identifier:", data.identifier);
   const { identifier, password } = data;
 
-  //  Validate required fields
   if (!identifier || !password) {
     throw new AppError(400, 'Username/Email and password are required');
   }
 
-  //  Query Staff by username or email
+  console.log("Step 2: Querying database for staff member...");
   const staff = await prisma.staff.findFirst({
     where: {
       OR: [
@@ -194,39 +194,50 @@ export const loginStaff = async (data: StaffLoginDTO) => {
     }
   });
 
-  //  Check if staff exists and is active
+  console.log("Step 3: Database query complete. Staff found:", !!staff);
+
   if (!staff || !staff.isActive) {
+    console.log("Error: Staff not found or inactive.");
     throw new AppError(401, 'Invalid credentials or inactive account');
   }
 
-  //  Verify password hash
+  console.log("Step 4: Verifying password hash...");
   const isMatch = await bcrypt.compare(password, staff.passwordHash);
+  
+  console.log("Step 5: Password match result:", isMatch);
   if (!isMatch) {
     throw new AppError(401, 'Invalid credentials');
   }
 
-  //  Generate Staff Access Token
-  // If your signAccessToken utility expects userId, you can sign directly or pass staffId
-  const token = signAccessToken({
-    staffId: staff.id,
-    role: staff.role,
-  } as any);
-
-//Record login event in AuditLog
-  await prisma.auditlog.create({
-    data: {
+  console.log("Step 6: Generating Access Token...");
+  try {
+    const token = signAccessToken({
       staffId: staff.id,
-      action: 'STAFF_LOGIN',
-      targetEntity: 'Staff',
-      targetId: staff.id,
-      details: JSON.stringify({
-        username: staff.username,
-        role: staff.role,
-        timestamp: new Date().toISOString()
-      })
-    }
-  });
-  return token;
+      role: staff.role,
+    } as any);
+    console.log("Step 7: Token generated successfully.");
+
+    console.log("Step 8: Creating Audit Log...");
+    await prisma.auditlog.create({
+      data: {
+        staffId: staff.id,
+        action: 'STAFF_LOGIN',
+        targetEntity: 'Staff',
+        targetId: staff.id,
+        details: JSON.stringify({
+          username: staff.username,
+          role: staff.role,
+          timestamp: new Date().toISOString()
+        })
+      }
+    });
+    
+    console.log("Step 9: Login successful. Returning token.");
+    return token;
+  } catch (err) {
+    console.error("CRASH: Error during token generation or audit log:", err);
+    throw err;
+  }
 }
 export const getStaffProfile = async (staffId: string) => {
   if (!staffId) {
