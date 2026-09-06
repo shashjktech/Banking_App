@@ -29,26 +29,15 @@ async function main() {
   const operatorPassword = await bcrypt.hash('Staff@123', 10);
 
   // 3. Seed Staff Members
-  const admin = await prisma.staff.upsert({
-    where: { email: 'admin@jkbank.internal' },
-    update: { branchid: branch.id },
-    create: {
-      branchid: branch.id,
-      username: 'superadmin',
-      email: 'admin@jkbank.internal',
-      passwordHash: adminPassword,
-      role: staffRole.ADMIN,
-      isActive: true,
-    },
-  });
+ 
 
   const operator = await prisma.staff.upsert({
-    where: { email: 'operator1@jkbank.internal' },
+    where: { email: 'operator2@jkbank.internal' },
     update: { branchid: branch.id },
     create: {
       branchid: branch.id,
-      username: 'operator1',
-      email: 'operator1@jkbank.internal',
+      username: 'operator2',
+      email: 'operator2@jkbank.internal',
       passwordHash: operatorPassword,
       role: staffRole.OPERATOR,
       isActive: true,
@@ -56,7 +45,6 @@ async function main() {
   });
   console.log('✅ Seed completed successfully:');
   console.log(`   - Branch: ${branch.name} (${branch.branchcode})`);
-  console.log(`   - Admin: ${admin.email} (Password: Admin@123)`);
   console.log(`   - Operator: ${operator.email} (Password: Operator@123)`);
 }
 

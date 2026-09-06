@@ -17,8 +17,8 @@ staffRouter.post('/login', async (req, res, next) => {
     res.cookie('staffToken', result, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 60 * 1000, // 8 hours
+      sameSite: 'none',
+      maxAge: 30 * 60 * 1000, 
     });
 
     res.status(200).json({

@@ -5,7 +5,7 @@ const CreateAccount = ({ branch }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
   // 1. ADD LOAN FIELDS TO STATE
   const [formData, setFormData] = useState({
     accountType: 'SAVINGS',
@@ -49,7 +49,7 @@ const CreateAccount = ({ branch }) => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/bank/staff/create', {
+      const res = await fetch(`${API_BASE_URL}/staff/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
