@@ -10,10 +10,7 @@ export function creatApp(){
     const app = express();
     app.set('trust proxy', 1);
     app.use(cors({
-        origin:[
-            "http://localhost:5173",
-            env.client_url
-        ].filter(Boolean) as string[],
+        origin:"https://project-242bd360-d8b9-4aad-9e6.web.app/",
         credentials: true
     }));
     app.use(express.json());
